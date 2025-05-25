@@ -21,8 +21,8 @@ jobs:
 
       - name: Validar sintaxis Bicep
         run: |
-          az bicep build --file azure/main.bicep
+          az bicep build --file infra/azure/main.bicep
 
       - name: Lint Bicep
         run: |
-          az bicep lint --file azure/main.bicep
+          az bicep lint --file infra/azure/main.bicep
