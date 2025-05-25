@@ -1,0 +1,25 @@
+name: 🐞 Reportar un bug
+description: Reporta un problema en la infraestructura
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: ¿Qué ocurrió?
+      description: Describe el error con el máximo detalle posible.
+      placeholder: El despliegue falla cuando...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Pasos para reproducir
+      description: Lista los pasos necesarios para reproducir el problema.
+      placeholder: |
+        1. Ejecutar terraform apply
+        2. ...
+  - type: input
+    attributes:
+      label: Plataforma
+      description: ¿Dónde ocurrió el bug? (Azure, AWS, GCP)
+    validations:
+      required: true

@@ -1,0 +1,21 @@
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+terraform.tfvars.json
+.terraform.lock.hcl
+
+# Bicep build artifacts
+*.bicep
+*.json
+
+# IDEs and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
