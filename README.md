@@ -6,29 +6,29 @@
 
 ## Tabla de Contenidos
 
-- Introducción
-- Estructura del Repositorio
-- Guía Rápida por Proveedor
-- Ejemplo Multi-Cloud
-- Mejores Prácticas Implementadas
-- Validación y Seguridad
-- Contribuir
-- Licencia
+- [Introducción](#introducción)
+- [Propósito](#propósito)
+- [Características](#características)
+- [Estructura del Repositorio](#estructura-del-repositorio)
+- [Diagramas de Arquitectura](#diagramas-de-arquitectura)
+- [Mejores Prácticas](#mejores-prácticas)
+- [Guía Rápida por Proveedor](#guía-rápida-por-proveedor)
+- [Ejemplo Multi-Cloud](#ejemplo-multi-cloud)
+- [Validación y Seguridad](#validación-y-seguridad)
+- [Testing Automático](#testing-automático)
+- [CI/CD Multi-Cloud](#cicd-multi-cloud-con-azure-pipelines)
+- [Contribuir](#contribuir)
+- [Licencia](#licencia)
 
-## Diagramas de Arquitectura
+---
 
-```mermaid
-graph TD
-  Azure --> AWS
-  AWS --> GCP
-  GCP --> Azure
-```
+## Introducción
 
-Este repositorio contiene plantillas modulares para Azure, AWS y GCP.
+Este repositorio contiene plantillas modulares para Azure, AWS y GCP, facilitando la implementación de soluciones multi-cloud siguiendo las mejores prácticas de cada proveedor.
 
 ## Propósito
 
-Este repositorio sirve como ejemplo para programadores de infraestructura como código (IaC) que buscan implementar soluciones multi-cloud siguiendo las mejores prácticas recomendadas por Microsoft (Azure), Amazon (AWS) y Google (GCP).
+Sirve como ejemplo para programadores de infraestructura como código (IaC) que buscan implementar soluciones multi-cloud siguiendo las mejores prácticas recomendadas por Microsoft (Azure), Amazon (AWS) y Google (GCP).
 
 ## Características
 
@@ -36,18 +36,6 @@ Este repositorio sirve como ejemplo para programadores de infraestructura como c
 - Estructura y nomenclatura estandarizada.
 - Ejemplos de implementación y despliegue.
 - Documentación sobre mejores prácticas de seguridad, escalabilidad y mantenimiento.
-
-## Mejores Prácticas
-
-- **Azure:** Se siguen las [Azure Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/) y las recomendaciones de seguridad y gobernanza de Microsoft.
-- **AWS:** Se aplican las [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) y las guías de buenas prácticas de Amazon.
-- **GCP:** Se implementan las [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework) y las recomendaciones de Google.
-
-| Proveedor | Framework                                                                                     | Ejemplo de Mejores Prácticas                                                   |
-| --------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Azure     | [Azure Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/) | Uso de módulos reutilizables, parámetros seguros, control de acceso y tagging. |
-| AWS       | [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)       | Separación de recursos, variables parametrizadas, integración con IAM y VPC.   |
-| GCP       | [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework)        | Modularidad, uso de variables, control de acceso y buenas prácticas de red.    |
 
 ## Estructura del Repositorio
 
@@ -78,6 +66,52 @@ multi-cloud-templates/
 - **README.md:** Documentación principal del repositorio.
 - **LICENSE:** Información sobre la licencia del repositorio.
 
+## Diagramas de Arquitectura
+
+### Relación Multi-Cloud
+
+```mermaid
+graph TD
+  Azure --> AWS
+  AWS --> GCP
+  GCP --> Azure
+```
+
+### Diagrama de Arquitectura en Azure
+
+```mermaid
+graph LR
+    subgraph Azure
+        az-vnet[VNet]
+        az-subnet[Subnet]
+        az-nsg[NSG]
+        az-vm[VM]
+        az-sa[Storage Account]
+        az-kv[Key Vault]
+    end
+    az-vnet --> az-subnet
+    az-subnet --> az-vm
+    az-subnet --> az-nsg
+    az-vm --> az-sa
+    az-vm --> az-kv
+```
+
+---
+
+## Mejores Prácticas
+
+- **Azure:** Se siguen las [Azure Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/) y las recomendaciones de seguridad y gobernanza de Microsoft.
+- **AWS:** Se aplican las [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) y las guías de buenas prácticas de Amazon.
+- **GCP:** Se implementan las [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework) y las recomendaciones de Google.
+
+| Proveedor | Framework                                                                                     | Ejemplo de Mejores Prácticas                                                   |
+| --------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Azure     | [Azure Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/) | Uso de módulos reutilizables, parámetros seguros, control de acceso y tagging. |
+| AWS       | [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)       | Separación de recursos, variables parametrizadas, integración con IAM y VPC.   |
+| GCP       | [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework)        | Modularidad, uso de variables, control de acceso y buenas prácticas de red.    |
+
+---
+
 ## Guía Rápida por Proveedor
 
 ### Azure
@@ -101,6 +135,8 @@ cd gcp
 terraform init
 terraform apply -var-file=../environments/dev/terraform.tfvars
 ```
+
+---
 
 ## Ejemplo Multi-Cloud
 
@@ -127,6 +163,8 @@ cd ..
 
 > **Consejo:** Personaliza los scripts para cada entorno (`dev`, `test`, `prod`) y utiliza variables de entorno para mayor seguridad.
 
+---
+
 ## Validación y Seguridad
 
 - **Azure:** Usa `bicep build` y `bicep linter` para validar las plantillas.
@@ -147,6 +185,8 @@ Este script realiza:
 
 Asegúrate de tener permisos y credenciales configuradas si alguna validación requiere acceso a la nube.
 
+---
+
 ## Testing Automático
 
 - **Azure:** `./scripts/test-aks.sh <nombre-grupo-recursos> <nombre-aks>`
@@ -154,6 +194,8 @@ Asegúrate de tener permisos y credenciales configuradas si alguna validación r
 - **GCP:** `./scripts/test-gcp.sh`
 
 Estos scripts validan la existencia y estado de los recursos principales desplegados en cada proveedor.
+
+---
 
 ## CI/CD Multi-Cloud con Azure Pipelines
 

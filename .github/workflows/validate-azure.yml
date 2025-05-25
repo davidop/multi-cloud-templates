@@ -1,0 +1,28 @@
+# Workflow de GitHub Actions para validación de Bicep en Azure siguiendo mejores prácticas
+
+name: Validate Azure Bicep
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Instalar Bicep CLI
+        run: |
+          az bicep install
+
+      - name: Validar sintaxis Bicep
+        run: |
+          az bicep build --file azure/main.bicep
+
+      - name: Lint Bicep
+        run: |
+          az bicep linter --file azure/main.bicep
