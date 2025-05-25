@@ -1,6 +1,0 @@
-name: Validate IaC
-on:
-  pull_request:
-    paths:
-      - 'aws/**'
-...

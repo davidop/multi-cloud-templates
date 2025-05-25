@@ -1,3 +1,5 @@
+[![Deploy Azure Bicep](https://github.com/davidop/multi-cloud-templates/actions/workflows/deploy-azure.yml/badge.svg)](https://github.com/davidop/multi-cloud-templates/actions/workflows/deploy-azure.yml)
+
 # Multi-Cloud Templates
 
 [Badges de estado]
@@ -41,11 +43,11 @@ Este repositorio sirve como ejemplo para programadores de infraestructura como c
 - **AWS:** Se aplican las [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) y las guías de buenas prácticas de Amazon.
 - **GCP:** Se implementan las [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework) y las recomendaciones de Google.
 
-## Cómo usar este repositorio
-
-1. Explora las carpetas de cada proveedor cloud.
-2. Consulta los ejemplos y la documentación incluida.
-3. Adapta las plantillas a tus necesidades siguiendo las mejores prácticas descritas.
+| Proveedor | Framework                                                                                     | Ejemplo de Mejores Prácticas                                                   |
+| --------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Azure     | [Azure Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/) | Uso de módulos reutilizables, parámetros seguros, control de acceso y tagging. |
+| AWS       | [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)       | Separación de recursos, variables parametrizadas, integración con IAM y VPC.   |
+| GCP       | [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework)        | Modularidad, uso de variables, control de acceso y buenas prácticas de red.    |
 
 ## Estructura del Repositorio
 
@@ -64,7 +66,8 @@ multi-cloud-templates/
 │   ├── dev/
 │   ├── test/
 │   └── prod/
-├── azure-pipelines.yml
+├── .azure-pipelines/
+│   └── azure-pipelines.yml
 ├── CONTRIBUTING.md
 ├── LICENSE
 └── README.md
@@ -103,47 +106,19 @@ terraform apply -var-file=../environments/dev/terraform.tfvars
 
 Puedes desplegar recursos en los tres proveedores ejecutando los scripts de cada carpeta o integrando los pasos en un pipeline CI/CD (ver `azure-pipelines.yml`).
 
-## Ejemplo de Despliegue Completo Multi-Cloud
-
-A continuación se muestra un ejemplo de cómo realizar un despliegue coordinado en los tres proveedores utilizando scripts y buenas prácticas:
-
-### 1. Despliegue en Azure
+### Despliegue Coordinado Multi-Cloud
 
 ```bash
+# Azure
 az deployment group create --resource-group <grupo> --template-file azure/main.bicep --parameters @environments/dev/azure-parameters.json
-```
 
-### 2. Despliegue en AWS
-
-```bash
-cd aws
-terraform init
-terraform apply -var-file=../environments/dev/terraform.tfvars -auto-approve
-```
-
-### 3. Despliegue en GCP
-
-```bash
-cd gcp
-terraform init
-terraform apply -var-file=../environments/dev/terraform.tfvars -auto-approve
-```
-
-### 4. Orquestación desde un Script (opcional)
-
-Puedes crear un script de automatización (por ejemplo, `deploy-all.ps1` en PowerShell):
-
-```powershell
-# Despliegue Azure
-ez deployment group create --resource-group <grupo> --template-file azure/main.bicep --parameters @environments/dev/azure-parameters.json
-
-# Despliegue AWS
+# AWS
 cd aws
 terraform init
 terraform apply -var-file=../environments/dev/terraform.tfvars -auto-approve
 cd ..
 
-# Despliegue GCP
+# GCP
 cd gcp
 terraform init
 terraform apply -var-file=../environments/dev/terraform.tfvars -auto-approve
@@ -157,7 +132,7 @@ cd ..
 - **Azure:** Usa `bicep build` y `bicep linter` para validar las plantillas.
 - **AWS/GCP:** Usa `terraform validate` y herramientas como `tfsec` o `checkov` para escaneo de seguridad.
 
-## Validación Automática Multi-Cloud
+### Validación Automática Multi-Cloud
 
 Puedes validar todas las plantillas de Azure, AWS y GCP automáticamente ejecutando el siguiente script dentro del devcontainer:
 
@@ -172,195 +147,13 @@ Este script realiza:
 
 Asegúrate de tener permisos y credenciales configuradas si alguna validación requiere acceso a la nube.
 
----
+## Testing Automático
 
-## Mejores Prácticas Implementadas
+- **Azure:** `./scripts/test-aks.sh <nombre-grupo-recursos> <nombre-aks>`
+- **AWS:** `./scripts/test-aws.sh`
+- **GCP:** `./scripts/test-gcp.sh`
 
-A continuación se muestra cómo cada módulo sigue las recomendaciones de los frameworks Well-Architected de cada proveedor:
-
-| Proveedor | Framework                                                                                     | Ejemplo de Mejores Prácticas                                                   |
-| --------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Azure     | [Azure Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/) | Uso de módulos reutilizables, parámetros seguros, control de acceso y tagging. |
-| AWS       | [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)       | Separación de recursos, variables parametrizadas, integración con IAM y VPC.   |
-| GCP       | [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework)        | Modularidad, uso de variables, control de acceso y buenas prácticas de red.    |
-
-## Diagramas Técnicos
-
-### Diagrama de Red Multi-Cloud (Mermaid)
-
-```mermaid
-graph LR
-    subgraph Azure
-        az-vnet[VNet]
-        az-vm[VM]
-        az-kv[Key Vault]
-    end
-    subgraph AWS
-        aws-vpc[VPC]
-        aws-ec2[EC2]
-        aws-secrets[Secrets Manager]
-    end
-    subgraph GCP
-        gcp-net[Network]
-        gcp-vm[VM]
-        gcp-secrets[Secret Manager]
-    end
-    az-vnet -- Peering --> aws-vpc
-    aws-vpc -- Peering --> gcp-net
-    gcp-net -- Peering --> az-vnet
-    az-vm -- Acceso --> az-kv
-    aws-ec2 -- Acceso --> aws-secrets
-    gcp-vm -- Acceso --> gcp-secrets
-```
-
----
-
-## Guía Avanzada: Orquestación Multi-Cloud con PowerShell
-
-Puedes automatizar el despliegue y validación de todos los entornos con un script PowerShell:
-
-```powershell
-# Variables de entorno
-$env:TF_VAR_env = "dev"
-$resourceGroup = "mi-grupo"
-
-# Despliegue Azure
-az deployment group create --resource-group $resourceGroup --template-file azure/main.bicep --parameters @environments/$env/azure-parameters.json
-
-# Validación Azure
-bicep build azure/main.bicep
-bicep linter azure/main.bicep
-
-# Despliegue AWS
-cd aws
-terraform init
-terraform apply -var-file=../environments/$env/terraform.tfvars -auto-approve
-
-# Validación AWS
-terraform validate
-# Seguridad
-if (Get-Command tfsec -ErrorAction SilentlyContinue) { tfsec . }
-if (Get-Command checkov -ErrorAction SilentlyContinue) { checkov -d . }
-cd ..
-
-# Despliegue GCP
-cd gcp
-terraform init
-terraform apply -var-file=../environments/$env/terraform.tfvars -auto-approve
-
-# Validación GCP
-terraform validate
-if (Get-Command tfsec -ErrorAction SilentlyContinue) { tfsec . }
-if (Get-Command checkov -ErrorAction SilentlyContinue) { checkov -d . }
-cd ..
-```
-
----
-
-## Ejemplo de Validación Automática en CI/CD (Azure Pipelines)
-
-Agrega los siguientes jobs a tu `azure-pipelines.yml` para validar automáticamente las plantillas en cada commit:
-
-```yaml
-trigger:
-  - main
-
-jobs:
-  - job: Validate_Azure
-    displayName: "Validar Bicep Azure"
-    pool:
-      vmImage: "ubuntu-latest"
-    steps:
-      - script: |
-          bicep build azure/main.bicep
-          bicep linter azure/main.bicep
-        displayName: "Validar Bicep"
-
-  - job: Validate_AWS
-    displayName: "Validar Terraform AWS"
-    pool:
-      vmImage: "ubuntu-latest"
-    steps:
-      - script: |
-          cd aws
-          terraform init
-          terraform validate
-          if command -v tfsec; then tfsec .; fi
-          if command -v checkov; then checkov -d .; fi
-        displayName: "Validar Terraform AWS"
-
-  - job: Validate_GCP
-    displayName: "Validar Terraform GCP"
-    pool:
-      vmImage: "ubuntu-latest"
-    steps:
-      - script: |
-          cd gcp
-          terraform init
-          terraform validate
-          if command -v tfsec; then tfsec .; fi
-          if command -v checkov; then checkov -d .; fi
-        displayName: "Validar Terraform GCP"
-```
-
----
-
-## Ejemplo de Testing para AKS
-
-Puedes probar automáticamente el despliegue de tu clúster AKS ejecutando el siguiente script después del despliegue:
-
-```bash
-./scripts/test-aks.sh <nombre-grupo-recursos> <nombre-aks>
-```
-
-Este script valida:
-
-- Que el clúster AKS existe y está en estado Succeeded
-- Que el node pool tiene al menos un nodo
-
-Puedes extender este script para validar otros recursos o integrarlo en tu pipeline CI/CD.
-
----
-
-## Ejemplo de Testing para AWS
-
-Puedes probar automáticamente el despliegue de tus recursos en AWS ejecutando el siguiente script:
-
-```bash
-./scripts/test-aws.sh
-```
-
-Este script valida:
-
-- Que la VPC con el tag Name=vpc-demo existe
-- Que hay al menos una instancia EC2 en la VPC
-
----
-
-## Ejemplo de Testing para GCP
-
-Puedes probar automáticamente el despliegue de tus recursos en GCP ejecutando el siguiente script:
-
-```bash
-./scripts/test-gcp.sh
-```
-
-Este script valida:
-
-- Que la red (network-demo) existe en el proyecto
-- Que existe una VM llamada vm-demo en la red
-
-Puedes adaptar los nombres de recursos según tu configuración de Terraform.
-
----
-
-## Contribuir
-
-Las contribuciones son bienvenidas. Por favor, lee el archivo [CONTRIBUTING.md](http://_vscodecontentref_/4) para más detalles sobre cómo contribuir a este repositorio.
-
-## Licencia
-
-Este proyecto está bajo la licencia [MIT](http://_vscodecontentref_/5).
+Estos scripts validan la existencia y estado de los recursos principales desplegados en cada proveedor.
 
 ## CI/CD Multi-Cloud con Azure Pipelines
 
@@ -378,3 +171,13 @@ Este repositorio incluye una pipeline unificada (`azure-pipelines.yml`) que vali
    - GCP: test de red y VM (`scripts/test-gcp.sh`).
 
 Puedes consultar y modificar la pipeline en el archivo `azure-pipelines.yml`.
+
+---
+
+## Contribuir
+
+Las contribuciones son bienvenidas. Por favor, lee el archivo [CONTRIBUTING.md](http://_vscodecontentref_/4) para más detalles sobre cómo contribuir a este repositorio.
+
+## Licencia
+
+Este proyecto está bajo la licencia [MIT](http://_vscodecontentref_/5).

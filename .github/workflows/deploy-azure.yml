@@ -1,0 +1,51 @@
+# Workflow de GitHub Actions para despliegue seguro y validación de Bicep en Azure
+# Usa OIDC para autenticación sin secretos y soporta despliegue a dev, test y prod
+
+name: Deploy Azure Bicep
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, test, prod]
+    env:
+      AZURE_RESOURCE_GROUP: ${{ secrets[format('AZURE_RG_{0}', matrix.environment)] }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: false
+          allow-no-subscriptions: false
+
+      - name: Instalar Bicep CLI
+        run: |
+          az bicep install
+
+      - name: Validar sintaxis Bicep
+        run: |
+          az bicep build --file azure/main.bicep
+
+      - name: Lint Bicep
+        run: |
+          az bicep linter --file azure/main.bicep
+
+      - name: Desplegar plantilla Bicep
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --template-file azure/main.bicep \
+            --parameters @environments/${{ matrix.environment }}/azure-parameters.json
