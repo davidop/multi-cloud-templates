@@ -17,6 +17,7 @@
 - [Validación y Seguridad](#validación-y-seguridad)
 - [Testing Automático](#testing-automático)
 - [CI/CD Multi-Cloud](#cicd-multi-cloud-con-azure-pipelines)
+- [Metodología Recomendada](#metodología-recomendada)
 - [Contribuir](#contribuir)
 - [Licencia](#licencia)
 
@@ -60,11 +61,6 @@ multi-cloud-templates/
 ├── LICENSE
 └── README.md
 ```
-
-- **/azure, /aws, /gcp:** Carpetas específicas para cada proveedor cloud que contienen módulos, plantillas y documentación relacionada.
-- **/comun:** Recursos y módulos compartidos entre los diferentes proveedores cloud.
-- **README.md:** Documentación principal del repositorio.
-- **LICENSE:** Información sobre la licencia del repositorio.
 
 ## Diagramas de Arquitectura
 
@@ -217,10 +213,24 @@ Puedes consultar y modificar la pipeline en el archivo `azure-pipelines.yml`.
 
 ---
 
+## Metodología Recomendada
+
+Este repositorio aplica una metodología basada en:
+
+- **Bicep para Azure** (por su integración nativa y simplicidad)
+- **Terraform para AWS y GCP** (por su robustez, comunidad y soporte multicloud)
+- **Estructura modular y entornos separados (dev, test, prod)**
+- **Reutilización de código** con módulos, variables y pipelines compartidos
+- **Automatización con GitHub Actions y/o Azure DevOps**
+
+Esta metodología permite a cada equipo trabajar con la herramienta más eficiente para su entorno, sin sacrificar la coherencia ni la trazabilidad de las implementaciones.
+
+---
+
 ## Contribuir
 
-Las contribuciones son bienvenidas. Por favor, lee el archivo [CONTRIBUTING.md](http://_vscodecontentref_/4) para más detalles sobre cómo contribuir a este repositorio.
+Las contribuciones son bienvenidas. Por favor, lee el archivo [CONTRIBUTING.md](./CONTRIBUTING.md) para más detalles sobre cómo contribuir a este repositorio.
 
 ## Licencia
 
-Este proyecto está bajo la licencia [MIT](http://_vscodecontentref_/5).
+Este proyecto está bajo la licencia [MIT](./LICENSE).
