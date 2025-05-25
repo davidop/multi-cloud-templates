@@ -80,18 +80,19 @@ graph TD
 ### Diagrama de Arquitectura en Azure
 
 ```mermaid
-graph LR
-    subgraph Azure
-        az-vnet[VNet]
-        az-subnet[Subnet]
-        az-nsg[NSG]
-        az-vm[VM]
-        az-sa[Storage Account]
-        az-kv[Key Vault]
-    end
+flowchart LR
+    az-vnet[VNet]
+    az-subnet[Subnet]
+    az-nsg[NSG]
+    az-aks[AKS Cluster]
+    az-vm[VM]
+    az-sa[Storage Account]
+    az-kv[Key Vault]
     az-vnet --> az-subnet
-    az-subnet --> az-vm
     az-subnet --> az-nsg
+    az-subnet --> az-aks
+    az-subnet --> az-vm
+    az-aks --> az-kv
     az-vm --> az-sa
     az-vm --> az-kv
 ```

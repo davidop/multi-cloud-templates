@@ -25,4 +25,4 @@ jobs:
 
       - name: Lint Bicep
         run: |
-          az bicep linter --file azure/main.bicep
+          az bicep lint --file azure/main.bicep
