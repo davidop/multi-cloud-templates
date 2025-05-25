@@ -25,3 +25,16 @@ jobs:
           git add .
           git commit -m "Add Bicep templates for Azure"
           git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/davidop/multi-cloud-templates.git feature/plantillas-bicep
+
+      - name: Build and Lint Bicep
+        run: |
+          az bicep install
+          bicep build azure/main.bicep
+          bicep linter azure/main.bicep
+
+      - name: Test AKS Deployment
+        env:
+          AZURE_RG: ${{ secrets.AZURE_RG }}
+        run: |
+          chmod +x scripts/test-aks.sh
+          ./scripts/test-aks.sh $AZURE_RG aks-demo

@@ -157,6 +157,23 @@ cd ..
 - **Azure:** Usa `bicep build` y `bicep linter` para validar las plantillas.
 - **AWS/GCP:** Usa `terraform validate` y herramientas como `tfsec` o `checkov` para escaneo de seguridad.
 
+## Validación Automática Multi-Cloud
+
+Puedes validar todas las plantillas de Azure, AWS y GCP automáticamente ejecutando el siguiente script dentro del devcontainer:
+
+```bash
+./scripts/validate-all.sh
+```
+
+Este script realiza:
+
+- Build y lint de plantillas Bicep (Azure)
+- Init, validate y escaneo de seguridad (tfsec, checkov) para Terraform (AWS y GCP)
+
+Asegúrate de tener permisos y credenciales configuradas si alguna validación requiere acceso a la nube.
+
+---
+
 ## Mejores Prácticas Implementadas
 
 A continuación se muestra cómo cada módulo sigue las recomendaciones de los frameworks Well-Architected de cada proveedor:
@@ -288,6 +305,55 @@ jobs:
 
 ---
 
+## Ejemplo de Testing para AKS
+
+Puedes probar automáticamente el despliegue de tu clúster AKS ejecutando el siguiente script después del despliegue:
+
+```bash
+./scripts/test-aks.sh <nombre-grupo-recursos> <nombre-aks>
+```
+
+Este script valida:
+
+- Que el clúster AKS existe y está en estado Succeeded
+- Que el node pool tiene al menos un nodo
+
+Puedes extender este script para validar otros recursos o integrarlo en tu pipeline CI/CD.
+
+---
+
+## Ejemplo de Testing para AWS
+
+Puedes probar automáticamente el despliegue de tus recursos en AWS ejecutando el siguiente script:
+
+```bash
+./scripts/test-aws.sh
+```
+
+Este script valida:
+
+- Que la VPC con el tag Name=vpc-demo existe
+- Que hay al menos una instancia EC2 en la VPC
+
+---
+
+## Ejemplo de Testing para GCP
+
+Puedes probar automáticamente el despliegue de tus recursos en GCP ejecutando el siguiente script:
+
+```bash
+./scripts/test-gcp.sh
+```
+
+Este script valida:
+
+- Que la red (network-demo) existe en el proyecto
+- Que existe una VM llamada vm-demo en la red
+
+Puedes adaptar los nombres de recursos según tu configuración de Terraform.
+
+---
+
 ## Contribuir
 
 Las contribuciones son bienvenidas. Por favor, lee el archivo [CONTRIBUTING.md](http://_vscodecontentref_/4) para más detalles sobre cómo contribuir a este repositorio.
@@ -295,3 +361,20 @@ Las contribuciones son bienvenidas. Por favor, lee el archivo [CONTRIBUTING.md](
 ## Licencia
 
 Este proyecto está bajo la licencia [MIT](http://_vscodecontentref_/5).
+
+## CI/CD Multi-Cloud con Azure Pipelines
+
+Este repositorio incluye una pipeline unificada (`azure-pipelines.yml`) que valida, despliega y testea automáticamente la infraestructura en Azure, AWS y GCP. El flujo es el siguiente:
+
+1. **Validación**
+   - Azure: build y lint de plantillas Bicep.
+   - AWS/GCP: init, validate y escaneo de seguridad (tfsec, checkov) para Terraform.
+2. **Despliegue**
+   - Azure: despliegue de recursos con Bicep.
+   - AWS/GCP: despliegue de recursos con Terraform.
+3. **Testing automático**
+   - Azure: test de clúster AKS (`scripts/test-aks.sh`).
+   - AWS: test de VPC e instancias EC2 (`scripts/test-aws.sh`).
+   - GCP: test de red y VM (`scripts/test-gcp.sh`).
+
+Puedes consultar y modificar la pipeline en el archivo `azure-pipelines.yml`.

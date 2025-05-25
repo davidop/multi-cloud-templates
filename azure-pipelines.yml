@@ -37,3 +37,92 @@ jobs:
           if command -v tfsec; then tfsec .; fi
           if command -v checkov; then checkov -d .; fi
         displayName: "Validar Terraform GCP"
+
+  - job: Deploy_Azure
+    displayName: "Desplegar Infraestructura Azure"
+    dependsOn: Validate_Azure
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - task: AzureCLI@2
+        displayName: "Desplegar Bicep en Azure"
+        inputs:
+          azureSubscription: "$(AZURE_SUBSCRIPTION_SERVICE_CONNECTION)"
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az deployment group create \
+              --resource-group $(AZURE_RG) \
+              --template-file azure/main.bicep \
+              --parameters @environments/dev/azure-parameters.json
+
+  - job: Deploy_AWS
+    displayName: "Desplegar Infraestructura AWS"
+    dependsOn: Validate_AWS
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - script: |
+          cd aws
+          terraform init
+          terraform apply -var-file=../environments/dev/terraform.tfvars -auto-approve
+        displayName: "Desplegar Terraform AWS"
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: aws
+          ArtifactName: aws-output
+
+  - job: Deploy_GCP
+    displayName: "Desplegar Infraestructura GCP"
+    dependsOn: Validate_GCP
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - script: |
+          cd gcp
+          terraform init
+          terraform apply -var-file=../environments/dev/terraform.tfvars -auto-approve
+        displayName: "Desplegar Terraform GCP"
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: gcp
+          ArtifactName: gcp-output
+
+  - job: Test_Azure
+    displayName: "Test AKS Azure"
+    dependsOn: Deploy_Azure
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - script: |
+          chmod +x scripts/test-aks.sh
+          ./scripts/test-aks.sh $(AZURE_RG) aks-demo
+        displayName: "Test AKS Azure"
+
+  - job: Test_AWS
+    displayName: "Test AWS"
+    dependsOn: Deploy_AWS
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - script: |
+          chmod +x scripts/test-aws.sh
+          ./scripts/test-aws.sh
+        displayName: "Test AWS"
+
+  - job: Test_GCP
+    displayName: "Test GCP"
+    dependsOn: Deploy_GCP
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - script: |
+          chmod +x scripts/test-gcp.sh
+          ./scripts/test-gcp.sh
+        displayName: "Test GCP"
