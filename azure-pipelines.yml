@@ -1,5 +1,39 @@
 trigger:
-  branches:
-    include:
-    - main
-...
+  - main
+
+jobs:
+  - job: Validate_Azure
+    displayName: "Validar Bicep Azure"
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - script: |
+          bicep build azure/main.bicep
+          bicep linter azure/main.bicep
+        displayName: "Validar Bicep"
+
+  - job: Validate_AWS
+    displayName: "Validar Terraform AWS"
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - script: |
+          cd aws
+          terraform init
+          terraform validate
+          if command -v tfsec; then tfsec .; fi
+          if command -v checkov; then checkov -d .; fi
+        displayName: "Validar Terraform AWS"
+
+  - job: Validate_GCP
+    displayName: "Validar Terraform GCP"
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - script: |
+          cd gcp
+          terraform init
+          terraform validate
+          if command -v tfsec; then tfsec .; fi
+          if command -v checkov; then checkov -d .; fi
+        displayName: "Validar Terraform GCP"
