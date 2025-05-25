@@ -1,0 +1,67 @@
+# Pipeline unificada para validación, despliegue y testing multi-cloud
+# Edita y expande según tus necesidades
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Validate
+    jobs:
+      - job: ValidateAzure
+        steps:
+          - script: az bicep build --file infra/azure/main.bicep
+            displayName: 'Bicep Build Azure'
+          - script: az bicep linter --file infra/azure/main.bicep
+            displayName: 'Bicep Lint Azure'
+      - job: ValidateAWS
+        steps:
+          - script: |
+              cd infra/aws
+              terraform init -backend=false
+              terraform validate
+              if command -v tfsec; then tfsec .; fi
+              if command -v checkov; then checkov -d .; fi
+            displayName: 'Terraform Validate AWS'
+      - job: ValidateGCP
+        steps:
+          - script: |
+              cd infra/gcp
+              terraform init -backend=false
+              terraform validate
+              if command -v tfsec; then tfsec .; fi
+              if command -v checkov; then checkov -d .; fi
+            displayName: 'Terraform Validate GCP'
+  - stage: Deploy
+    jobs:
+      - job: DeployAzure
+        steps:
+          - script: az deployment group create --resource-group $(AZURE_RG) --template-file infra/azure/main.bicep --parameters @environments/dev/azure-parameters.json
+            displayName: 'Deploy Azure Bicep'
+      - job: DeployAWS
+        steps:
+          - script: |
+              cd infra/aws
+              terraform apply -var-file=../../environments/dev/terraform.tfvars -auto-approve
+            displayName: 'Deploy AWS Terraform'
+      - job: DeployGCP
+        steps:
+          - script: |
+              cd infra/gcp
+              terraform apply -var-file=../../environments/dev/terraform.tfvars -auto-approve
+            displayName: 'Deploy GCP Terraform'
+  - stage: Test
+    jobs:
+      - job: TestAzure
+        steps:
+          - script: ./infra/scripts/test-aks.sh $(AZURE_RG) $(AKS_NAME)
+            displayName: 'Test AKS Azure'
+      - job: TestAWS
+        steps:
+          - script: ./infra/scripts/test-aws.sh
+            displayName: 'Test AWS'
+      - job: TestGCP
+        steps:
+          - script: ./infra/scripts/test-gcp.sh
+            displayName: 'Test GCP'

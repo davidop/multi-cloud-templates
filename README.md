@@ -1,8 +1,6 @@
-[![Deploy Azure Bicep](https://github.com/davidop/multi-cloud-templates/actions/workflows/deploy-azure.yml/badge.svg)](https://github.com/davidop/multi-cloud-templates/actions/workflows/deploy-azure.yml)
-
 # Multi-Cloud Templates
 
-[Badges de estado]
+[![Deploy Azure Bicep](https://github.com/davidop/multi-cloud-templates/actions/workflows/deploy-azure.yml/badge.svg)](https://github.com/davidop/multi-cloud-templates/actions/workflows/deploy-azure.yml)
 
 ## Tabla de Contenidos
 
@@ -11,6 +9,8 @@
 - [Características](#características)
 - [Estructura del Repositorio](#estructura-del-repositorio)
 - [Diagramas de Arquitectura](#diagramas-de-arquitectura)
+- [Diagramas de CI/CD y Testing](#diagramas-de-cicd-y-testing)
+- [Diagramas de Gestión de Secretos](#diagramas-de-gestión-de-secretos)
 - [Mejores Prácticas](#mejores-prácticas)
 - [Guía Rápida por Proveedor](#guía-rápida-por-proveedor)
 - [Ejemplo Multi-Cloud](#ejemplo-multi-cloud)
@@ -93,8 +93,8 @@ infra/
 
 ```mermaid
 graph TD
-  Azure --> AWS
-  AWS --> GCP
+  Azure((Azure)) --> AWS((AWS))
+  AWS --> GCP((GCP))
   GCP --> Azure
 ```
 
@@ -143,6 +143,79 @@ flowchart TD
     az-vnet --- aws-vpc
     aws-vpc --- gcp-net
     gcp-net --- az-vnet
+```
+
+### Diagrama de Componentes de Módulos Reutilizables
+
+```mermaid
+flowchart LR
+  subgraph Azure
+    A1[main.bicep] --> A2[modules/]
+    A2 --> A3[storage.bicep]
+    A2 --> A4[aks.bicep]
+    A2 --> A5[keyvault.bicep]
+  end
+  subgraph AWS
+    W1[main.tf] --> W2[modules/]
+    W2 --> W3[s3_bucket.tf]
+    W2 --> W4[ec2/]
+    W2 --> W5[vpc/]
+    W2 --> W6[secrets/]
+  end
+  subgraph GCP
+    G1[main.tf] --> G2[modules/]
+    G2 --> G3[storage_bucket.tf]
+    G2 --> G4[network/]
+    G2 --> G5[vm/]
+    G2 --> G6[secrets/]
+  end
+```
+
+---
+
+## Diagramas de CI/CD y Testing
+
+### Pipeline Multi-Cloud (CI/CD)
+
+```mermaid
+flowchart TD
+    C1[Push a main] --> C2[Validación]
+    C2 --> C3[Despliegue]
+    C3 --> C4[Testing]
+    C2 -->|Azure| C2A[az bicep build/lint]
+    C2 -->|AWS| C2B[terraform validate/tfsec/checkov]
+    C2 -->|GCP| C2C[terraform validate/tfsec/checkov]
+    C3 -->|Azure| C3A[az deployment group create]
+    C3 -->|AWS| C3B[terraform apply]
+    C3 -->|GCP| C3C[terraform apply]
+    C4 -->|Azure| C4A[test-aks.sh]
+    C4 -->|AWS| C4B[test-aws.sh]
+    C4 -->|GCP| C4C[test-gcp.sh]
+```
+
+---
+
+## Diagramas de Gestión de Secretos
+
+### Gestión de Secretos Multi-Cloud
+
+```mermaid
+flowchart LR
+    subgraph Azure
+      KV[Key Vault]
+    end
+    subgraph AWS
+      SM[Secrets Manager]
+    end
+    subgraph GCP
+      GSM[Secret Manager]
+    end
+    Dev[DevOps Pipeline] --> KV
+    Dev --> SM
+    Dev --> GSM
+    KV --- SM
+    SM --- GSM
+    GSM --- KV
 ```
 
 ---
@@ -282,196 +355,26 @@ Esta metodología permite a cada equipo trabajar con la herramienta más eficien
 
 1. **Unificar la estructura bajo `/infra/`**  
    Mueve todas las carpetas de proveedores y entornos bajo una raíz común (`/infra/`) para mayor claridad y escalabilidad.
-
 2. **Agregar carpeta `/scripts/`**  
    Centraliza scripts de validación, testing y automatización para facilitar su mantenimiento y descubrimiento.
-
 3. **Crear carpeta `/docs/`**  
    Incluye documentación extendida, diagramas, ejemplos de uso y guías de buenas prácticas.
-
 4. **Ejemplos de módulos reutilizables**  
    Añade ejemplos de módulos reutilizables para cada proveedor en `/infra/modules/` y referencia su uso en la documentación.
-
 5. **Automatización avanzada en CI/CD**  
    - Añade jobs de lint y seguridad para Terraform (`tflint`, `tfsec`, `checkov`).
    - Añade jobs de testing post-deploy usando los scripts de `/scripts/`.
    - Publica artefactos de validación y reportes de seguridad en cada pipeline.
-
 6. **Documentación de patrones de integración multicloud**  
    En `/docs/`, incluye ejemplos de patrones de integración entre clouds (por ejemplo, peering entre Azure y AWS, sincronización de secretos, etc).
-
 7. **Plantillas de issues y PRs**  
    Añade archivos `.github/ISSUE_TEMPLATE/` y `.github/pull_request_template.md` para estandarizar la colaboración.
-
 8. **Ejemplo de gestión de secretos**  
    Documenta y ejemplifica cómo gestionar secretos de forma segura en cada cloud y cómo integrarlo en pipelines.
-
 9. **Guía de migración y adopción**  
    Incluye una guía para equipos que migran de un solo cloud a multicloud, con recomendaciones de adopción progresiva.
-
 10. **Badges de estado adicionales**  
     Añade badges para validación de AWS, GCP y cobertura de tests.
-
----
-
-## Estructura recomendada de carpetas y archivos
-
-```text
-infra/
-├── azure/
-│   ├── main.bicep
-│   └── modules/
-│       └── storage.bicep         # Ejemplo de módulo reutilizable Azure
-├── aws/
-│   ├── main.tf
-│   └── modules/
-│       └── s3_bucket.tf          # Ejemplo de módulo reutilizable AWS
-├── gcp/
-│   ├── main.tf
-│   └── modules/
-│       └── storage_bucket.tf     # Ejemplo de módulo reutilizable GCP
-├── modules/
-│   ├── README.md                 # Documentación de módulos reutilizables
-├── environments/
-│   ├── dev/
-│   │   ├── azure-parameters.json
-│   │   └── terraform.tfvars
-│   ├── test/
-│   │   ├── azure-parameters.json
-│   │   └── terraform.tfvars
-│   └── prod/
-│       ├── azure-parameters.json
-│       └── terraform.tfvars
-├── scripts/
-│   ├── validate-all.sh           # Validación multi-cloud
-│   ├── test-aks.sh               # Test AKS Azure
-│   ├── test-aws.sh               # Test AWS
-│   └── test-gcp.sh               # Test GCP
-├── pipelines/
-│   └── azure-pipelines.yml
-├── docs/
-│   ├── patrones-integracion.md   # Ejemplos de integración multicloud
-│   ├── gestion-secrets.md        # Guía de gestión de secretos
-│   └── migracion-multicloud.md   # Guía de migración y adopción
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   │   └── bug_report.md
-│   │   └── feature_request.md
-│   └── pull_request_template.md
-├── CONTRIBUTING.md
-├── LICENSE
-└── README.md
-```
-
-### Ejemplo de módulo reutilizable (Azure Bicep)
-
-```bicep
-// filepath: /workspaces/multi-cloud-templates/infra/azure/modules/storage.bicep
-param name string
-param location string
-resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: name
-  location: location
-  sku: { name: 'Standard_LRS' }
-  kind: 'StorageV2'
-}
-output storageAccountId string = storage.id
-```
-
-### Ejemplo de módulo reutilizable (AWS Terraform)
-
-```hcl
-// filepath: /workspaces/multi-cloud-templates/infra/aws/modules/s3_bucket.tf
-variable "bucket_name" {}
-resource "aws_s3_bucket" "this" {
-  bucket = var.bucket_name
-  acl    = "private"
-}
-output "bucket_id" {
-  value = aws_s3_bucket.this.id
-}
-```
-
-### Ejemplo de módulo reutilizable (GCP Terraform)
-
-```hcl
-// filepath: /workspaces/multi-cloud-templates/infra/gcp/modules/storage_bucket.tf
-variable "bucket_name" {}
-resource "google_storage_bucket" "this" {
-  name     = var.bucket_name
-  location = "EU"
-}
-output "bucket_id" {
-  value = google_storage_bucket.this.id
-}
-```
-
-### Ejemplo de script de validación multi-cloud
-
-```bash
-# filepath: /workspaces/multi-cloud-templates/infra/scripts/validate-all.sh
-#!/bin/bash
-set -e
-echo "Validando Bicep Azure..."
-az bicep build --file ../azure/main.bicep
-az bicep linter --file ../azure/main.bicep
-
-echo "Validando Terraform AWS..."
-cd ../aws
-terraform init -backend=false
-terraform validate
-if command -v tfsec; then tfsec .; fi
-if command -v checkov; then checkov -d .; fi
-cd -
-
-echo "Validando Terraform GCP..."
-cd ../gcp
-terraform init -backend=false
-terraform validate
-if command -v tfsec; then tfsec .; fi
-if command -v checkov; then checkov -d .; fi
-cd -
-```
-
-### Ejemplo de plantilla de issue
-
-```markdown
-<!-- filepath: /workspaces/multi-cloud-templates/.github/ISSUE_TEMPLATE/bug_report.md -->
----
-name: Bug report
-about: Reporta un bug para este proyecto
-labels: bug
----
-
-**Describe el bug**
-Una descripción clara y concisa del problema.
-
-**Pasos para reproducir**
-1. Ir a '...'
-2. Ejecutar '...'
-3. Ver error
-
-**Comportamiento esperado**
-Una descripción clara y concisa de lo que esperabas que ocurriera.
-
-**Información adicional**
-Agrega cualquier otro contexto sobre el problema aquí.
-```
-
-### Ejemplo de plantilla de Pull Request
-
-```markdown
-<!-- filepath: /workspaces/multi-cloud-templates/.github/pull_request_template.md -->
-## Descripción
-
-<!-- Explica brevemente los cambios realizados -->
-
-## Checklist
-
-- [ ] El código pasa los tests y validaciones
-- [ ] La documentación ha sido actualizada si aplica
-- [ ] Los scripts y pipelines han sido probados
-```
 
 ---
 
