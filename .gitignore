@@ -1,4 +1,3 @@
-
 # Terraform
 .terraform/
 *.tfstate
@@ -11,7 +10,6 @@ terraform.tfvars.json
 .terraform.lock.hcl
 
 # Bicep build artifacts
-*.bicep
 *.json
 
 # IDEs and OS
